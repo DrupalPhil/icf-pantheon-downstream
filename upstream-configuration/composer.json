@@ -21,7 +21,12 @@
         "drupal/pathauto": "^1.14",
         "drupal/redirect": "^1.12",
         "drupal/metatag": "^2.2",
-        "drupal/simple_sitemap": "^4.2"
+        "drupal/simple_sitemap": "^4.2",
+        "drupal/better_exposed_filters": "^7.1",
+        "drupal/views_bulk_operations": "^4.4",
+        "drupal/views_data_export": "^1.8",
+        "drupal/draggableviews": "^2.1",
+        "drupal/views_entity_embed": "^2.0"
     },
     "extra": {
         "_README": "To make a custom upstream, clone this repository and add any dependencies to be provided by this upstream to this composer.json file. Leave the root-level composer.json file for the exclusive use of each individual site; do not modify it after your custom upstream has been published. See https://pantheon.io/docs/create-custom-upstream for more information."
