@@ -1,8 +1,8 @@
 _core:
   default_config_hash: ijfbzDTN4CbE7Sr-6ubWzy_t1vH4OtU1doNCLssVz-4
 langcode: en
-uuid: c6752290-4eb2-43bb-8a3b-2c3b0c454fe3
-name: 'Downstream Demo'
+uuid: d352fd58-c115-41e7-9f5f-e1345852d82d
+name: 'ICF DOWNSTREAM'
 mail: admin@icf-demo.com
 slogan: ''
 page:
