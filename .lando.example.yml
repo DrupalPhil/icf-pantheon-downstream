@@ -1,0 +1,22 @@
+# Copy this file to .lando.yml and customize for your project.
+# .lando.yml is gitignored and should NOT be committed.
+name: YOUR-PROJECT-NAME  # e.g., my-agency-site
+recipe: pantheon
+config:
+  webroot: web
+  xdebug: true
+  id: # Pantheon site UUID - find in your Pantheon dashboard
+  site: # Pantheon machine name - find in your Pantheon dashboard
+  # SOLR index
+  index: false
+  # VARNISH edge
+  edge: false
+  # REDIS cache
+  cache: false
+services:
+  phpmyadmin:
+    type: phpmyadmin
+tooling:
+  drush:
+    service: appserver
+    cmd: drush --uri=https://YOUR-PROJECT-NAME.lndo.site
