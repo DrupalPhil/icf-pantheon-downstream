@@ -1,5 +1,7 @@
 <?php
 
+$settings['config_sync_directory'] = '../config/default';
+
 /**
  * Load services definition file.
  */
