@@ -1,0 +1,50 @@
+name: Reusable – Deploy to Pantheon
+
+on:
+  workflow_call:
+    inputs:
+      target_env:
+        description: "Pantheon target environment (e.g. dev, pr-42, feature-x)"
+        required: true
+        type: string
+      delete_old_environments:
+        description: "Whether to clean up stale multidev environments"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    name: Deploy to Pantheon (${{ inputs.target_env }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+
+      - name: Install Composer dependencies
+        run: |
+          composer install \
+            --no-dev \
+            --no-interaction \
+            --prefer-dist \
+            --optimize-autoloader
+
+      - name: Deploy to Pantheon
+        uses: pantheon-systems/push-to-pantheon@0.9.0
+        with:
+          ssh_key: ${{ secrets.PANTHEON_SSH_KEY }}
+          machine_token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+          site: ${{ vars.PANTHEON_SITE_NAME }}
+          target_env: ${{ inputs.target_env }}
+          source_env: live
+          clone_content: false
+          delete_old_environments: ${{ inputs.delete_old_environments }}
+          git_user_name: "GitHub Actions Bot"
+          git_user_email: "bot@your-org.com"

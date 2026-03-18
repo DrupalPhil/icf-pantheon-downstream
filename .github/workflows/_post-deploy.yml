@@ -1,0 +1,33 @@
+name: Reusable – Post-deploy Drush tasks
+
+on:
+  workflow_call:
+    inputs:
+      pantheon_env:
+        description: "Pantheon environment to run Drush commands against (e.g. dev, pr-42, feature-x)"
+        required: true
+        type: string
+
+jobs:
+  post-deploy:
+    name: Post-deploy tasks (${{ inputs.pantheon_env }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Terminus
+        uses: pantheon-systems/terminus-github-actions@v1
+        with:
+          pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+
+      - name: Add SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.PANTHEON_SSH_KEY }}
+
+      - name: Drush post-deploy
+        run: |
+          SITE="${{ vars.PANTHEON_SITE_NAME }}"
+          ENV="${{ inputs.pantheon_env }}"
+          terminus drush $SITE.$ENV -- updatedb --yes
+          terminus drush $SITE.$ENV -- config:import --yes
+          terminus drush $SITE.$ENV -- cache:rebuild

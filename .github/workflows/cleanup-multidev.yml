@@ -1,0 +1,50 @@
+name: Cleanup Multidev on Branch Deletion
+
+on:
+  delete:
+    # Fires whenever any ref (branch or tag) is deleted.
+    # We filter to SIPA-* branches in the job condition below.
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    # Only run when a SIPA-* branch is deleted (not tags or other branches)
+    if: github.event.ref_type == 'branch' && startsWith(github.event.ref, 'SIPA-') && vars.IS_UPSTREAM != 'true'
+    name: Delete Multidev for ${{ github.event.ref }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Compute multidev name
+        id: multidev_name
+        run: |
+          BRANCH="${{ github.event.ref }}"
+
+          # Extract only the "SIPA-###" portion (letters SIPA, a hyphen, then digits)
+          TICKET=$(echo "$BRANCH" | grep -oE '^SIPA-[0-9]+')
+
+          # Lowercase
+          ENV=$(echo "$TICKET" | tr '[:upper:]' '[:lower:]')
+
+          echo "Derived multidev name: $ENV"
+          echo "multidev_name=${ENV}" >> $GITHUB_OUTPUT
+
+      - name: Install Terminus
+        uses: pantheon-systems/terminus-github-actions@v1
+        with:
+          pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+
+      - name: Delete the multidev environment
+        env:
+          PANTHEON_SITE: ${{ vars.PANTHEON_SITE_NAME }}
+          MULTIDEV_ENV: ${{ steps.multidev_name.outputs.multidev_name }}
+        run: |
+          # Verify the environment exists before attempting deletion
+          if terminus multidev:list "$PANTHEON_SITE" \
+              --format=list --field=id 2>/dev/null | grep -qx "$MULTIDEV_ENV"; then
+            echo "Deleting multidev: $MULTIDEV_ENV"
+            terminus multidev:delete "$PANTHEON_SITE.$MULTIDEV_ENV" --yes
+          else
+            echo "Multidev $MULTIDEV_ENV does not exist — nothing to delete."
+          fi

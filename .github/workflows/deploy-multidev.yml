@@ -1,0 +1,63 @@
+name: Deploy SIPA Branch to Pantheon Multidev
+
+on:
+  push:
+    branches:
+      - 'SIPA-*'
+
+concurrency:
+  group: deploy-multidev-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  deployments: write
+  pull-requests: write
+
+jobs:
+  # Compute the Pantheon-safe multidev name before calling the reusable workflow
+  prepare:
+    if: vars.IS_UPSTREAM != 'true'
+    name: Compute multidev name
+    runs-on: ubuntu-latest
+    outputs:
+      multidev_name: ${{ steps.multidev_name.outputs.multidev_name }}
+
+    steps:
+      # Pantheon multidev names must be:
+      #   - Max 11 characters
+      #   - Lowercase alphanumeric + hyphens only
+      #   - Must start with a letter
+      # Branch names follow the format "SIPA-###". This step extracts
+      # the ticket number and produces a name like "sipa-###".
+      - name: Compute Pantheon-safe multidev name
+        id: multidev_name
+        run: |
+          BRANCH="${{ github.ref_name }}"
+
+          # Extract only the "SIPA-###" portion (letters SIPA, a hyphen, then digits)
+          TICKET=$(echo "$BRANCH" | grep -oE '^SIPA-[0-9]+')
+
+          # Lowercase
+          ENV=$(echo "$TICKET" | tr '[:upper:]' '[:lower:]')
+
+          echo "Derived multidev name: $ENV"
+          echo "multidev_name=${ENV}" >> $GITHUB_OUTPUT
+
+  deploy:
+    if: vars.IS_UPSTREAM != 'true'
+    name: Deploy branch to Multidev
+    needs: prepare
+    uses: ./.github/workflows/_deploy.yml
+    secrets: inherit
+    with:
+      target_env: ${{ needs.prepare.outputs.multidev_name }}
+
+  post-deploy:
+    if: vars.IS_UPSTREAM != 'true'
+    name: Post-deploy tasks
+    needs: [prepare, deploy]
+    uses: ./.github/workflows/_post-deploy.yml
+    secrets: inherit
+    with:
+      pantheon_env: ${{ needs.prepare.outputs.multidev_name }}
