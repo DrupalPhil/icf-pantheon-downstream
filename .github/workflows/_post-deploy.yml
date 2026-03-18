@@ -24,6 +24,12 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.PANTHEON_SSH_KEY }}
 
+      - name: Wait for Pantheon deployment to complete
+        run: |
+          SITE="${{ vars.PANTHEON_SITE_NAME }}"
+          ENV="${{ inputs.pantheon_env }}"
+          terminus workflow:wait $SITE.$ENV
+
       - name: Drush post-deploy
         run: |
           SITE="${{ vars.PANTHEON_SITE_NAME }}"
